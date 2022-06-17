@@ -27,7 +27,7 @@ cache_set_c::~cache_set_c() {
  * @param name - cache name; use any name you want
  * @param num_sets - number of sets in a cache
  * @param assoc - number of cache entries in a set
- * @param line_size - cache block (line) size in bytes
+ * @param line_size - cache block (line) size in bytes // 이게 B
  */
 cache_c::cache_c(std::string name, int num_sets, int assoc, int line_size) {
   m_name = name;
@@ -72,6 +72,57 @@ void cache_c::access(addr_t address, int access_type) {
   ////////////////////////////////////////////////////////////////////
   // TODO: Write the code to implement this function
   ////////////////////////////////////////////////////////////////////
+
+  m_num_accesses += 1;
+
+  int tag_from_address = address >> int(log2(m_num_sets * m_line_size));
+  int idx_from_address = address >> int(log2(m_line_size)) & (m_num_sets-1);
+
+  switch (access_type) {
+  case 0: // read
+    if ((tag_from_address == (m_set[idx_from_address]->m_entry[0].m_tag)) && (m_set[idx_from_address]->m_entry[0].m_valid)) {
+      m_num_hits += 1;
+    }
+    else {
+      m_num_misses += 1;
+      m_num_writebacks += m_set[idx_from_address]->m_entry[0].m_dirty;
+
+      m_set[idx_from_address]->m_entry[0].m_tag = tag_from_address;
+    m_set[idx_from_address]->m_entry[0].m_dirty = false;
+      m_set[idx_from_address]->m_entry[0].m_valid = true;
+    }
+    break;
+  case 1: // write
+    m_num_writes += 1;
+    if ((tag_from_address == (m_set[idx_from_address]->m_entry[0].m_tag)) && (m_set[idx_from_address]->m_entry[0].m_valid)) {
+      m_num_hits += 1;
+      m_set[idx_from_address]->m_entry[0].m_dirty = true;
+    }
+    else {
+      m_num_misses += 1;
+      m_num_writebacks += m_set[idx_from_address]->m_entry[0].m_dirty;
+
+      m_set[idx_from_address]->m_entry[0].m_tag = tag_from_address;
+      m_set[idx_from_address]->m_entry[0].m_dirty = true;
+      m_set[idx_from_address]->m_entry[0].m_valid = true;
+    }
+    break;
+  case 2: // instruction fetch
+    if ((tag_from_address == (m_set[idx_from_address]->m_entry[0].m_tag)) && (m_set[idx_from_address]->m_entry[0].m_valid)) {
+      m_num_hits += 1;
+    }
+    else {
+      m_num_misses += 1;
+      m_num_writebacks += m_set[idx_from_address]->m_entry[0].m_dirty;
+
+      m_set[idx_from_address]->m_entry[0].m_tag = tag_from_address;
+    m_set[idx_from_address]->m_entry[0].m_dirty = false;
+      m_set[idx_from_address]->m_entry[0].m_valid = true;
+    }
+    break;
+  default:
+    break;
+  }
 }
 
 /**
