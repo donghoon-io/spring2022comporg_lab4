@@ -9,6 +9,10 @@
 #include <cstdint>
 #include <string>
 
+//Added
+#include <vector>
+#include <tuple>
+
 typedef uint64_t addr_t;
 
 ///////////////////////////////////////////////////////////////////
@@ -33,6 +37,7 @@ public:
     cache_entry_c *m_entry;  // array of cache entries. 
     int m_assoc;             // number of cache blocks in a cache set
     // TODO: maintain the LRU stack for this set
+    std::vector<int> LRU_stack;
 };
 
 ///////////////////////////////////////////////////////////////////

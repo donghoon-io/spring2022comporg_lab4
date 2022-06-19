@@ -41,7 +41,7 @@ int main(int argc, char** argv) {
   // TODO: compute the number of sets based on the input arguments 
   //       and pass it to the cache instance
   /////////////////////////////////////////////////////////////////////////////
-  int num_sets = 256;  // example: 256 sets
+  int num_sets = 64;  // example: 256 sets
   cache_c* cc = new cache_c("L1", num_sets, atoi(argv[3]), atoi(argv[4]));
   /////////////////////////////////////////////////////////////////////////////
 
