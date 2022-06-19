@@ -11,6 +11,7 @@
 //Added
 #include <vector>
 #include <tuple>
+#include <algorithm>
 
 /**
  * This allocates an "assoc" number of cache entries per a set
