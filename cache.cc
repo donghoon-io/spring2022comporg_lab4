@@ -96,7 +96,6 @@ void cache_c::access(addr_t address, int access_type) {
     }
     else {
       m_num_misses += 1;
-      m_num_writebacks += m_set[idx_from_address]->m_entry[hit_idx].m_dirty;
 
       if (!hit && (hit_idx != -1)) {
         m_set[idx_from_address]->LRU_stack.remove(hit_idx);
@@ -104,6 +103,8 @@ void cache_c::access(addr_t address, int access_type) {
       }
       else {
         hit_idx = m_set[idx_from_address]->LRU_stack.back();
+        m_num_writebacks += m_set[idx_from_address]->m_entry[hit_idx].m_dirty;
+
         m_set[idx_from_address]->LRU_stack.pop_back();
         m_set[idx_from_address]->LRU_stack.push_front(hit_idx);
       }
@@ -117,14 +118,13 @@ void cache_c::access(addr_t address, int access_type) {
     m_num_writes += 1;
     if (hit) {
       m_num_hits += 1;
-      m_set[idx_from_address]->m_entry[0].m_dirty = true;
+      m_set[idx_from_address]->m_entry[hit_idx].m_dirty = true;
       
       m_set[idx_from_address]->LRU_stack.remove(hit_idx);
       m_set[idx_from_address]->LRU_stack.push_front(hit_idx);
     }
     else {
       m_num_misses += 1;
-      m_num_writebacks += m_set[idx_from_address]->m_entry[hit_idx].m_dirty;
 
       if (!hit && (hit_idx != -1)) {
         m_set[idx_from_address]->LRU_stack.remove(hit_idx);
@@ -132,6 +132,8 @@ void cache_c::access(addr_t address, int access_type) {
       }
       else {
         hit_idx = m_set[idx_from_address]->LRU_stack.back();
+        m_num_writebacks += m_set[idx_from_address]->m_entry[hit_idx].m_dirty;
+
         m_set[idx_from_address]->LRU_stack.pop_back();
         m_set[idx_from_address]->LRU_stack.push_front(hit_idx);
       }
@@ -150,7 +152,6 @@ void cache_c::access(addr_t address, int access_type) {
     }
     else {
       m_num_misses += 1;
-      m_num_writebacks += m_set[idx_from_address]->m_entry[hit_idx].m_dirty;
 
       if (!hit && (hit_idx != -1)) {
         m_set[idx_from_address]->LRU_stack.remove(hit_idx);
@@ -158,6 +159,8 @@ void cache_c::access(addr_t address, int access_type) {
       }
       else {
         hit_idx = m_set[idx_from_address]->LRU_stack.back();
+        m_num_writebacks += m_set[idx_from_address]->m_entry[hit_idx].m_dirty;
+        
         m_set[idx_from_address]->LRU_stack.pop_back();
         m_set[idx_from_address]->LRU_stack.push_front(hit_idx);
       }
