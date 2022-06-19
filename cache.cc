@@ -8,6 +8,10 @@
 #include <string>
 #include <cmath>
 
+//Added
+#include <list>
+#include <tuple>
+
 /**
  * This allocates an "assoc" number of cache entries per a set
  * @param assoc - number of cache entries in a set
@@ -78,51 +82,106 @@ void cache_c::access(addr_t address, int access_type) {
   int tag_from_address = address >> int(log2(m_num_sets * m_line_size));
   int idx_from_address = address >> int(log2(m_line_size)) & (m_num_sets-1);
 
+  bool hit = false;
+  int hit_idx = -1;
+  std::tie(hit, hit_idx) = check_if_hit(idx_from_address, tag_from_address);
+
   switch (access_type) {
   case 0: // read
-    if ((tag_from_address == (m_set[idx_from_address]->m_entry[0].m_tag)) && (m_set[idx_from_address]->m_entry[0].m_valid)) {
+    if (hit) {
       m_num_hits += 1;
+      
+      m_set[idx_from_address]->LRU_stack.remove(hit_idx);
+      m_set[idx_from_address]->LRU_stack.push_front(hit_idx);
     }
     else {
       m_num_misses += 1;
-      m_num_writebacks += m_set[idx_from_address]->m_entry[0].m_dirty;
+      m_num_writebacks += m_set[idx_from_address]->m_entry[hit_idx].m_dirty;
 
-      m_set[idx_from_address]->m_entry[0].m_tag = tag_from_address;
-    m_set[idx_from_address]->m_entry[0].m_dirty = false;
-      m_set[idx_from_address]->m_entry[0].m_valid = true;
+      if (!hit && (hit_idx != -1)) {
+        m_set[idx_from_address]->LRU_stack.remove(hit_idx);
+        m_set[idx_from_address]->LRU_stack.push_front(hit_idx);
+      }
+      else {
+        hit_idx = m_set[idx_from_address]->LRU_stack.back();
+        m_set[idx_from_address]->LRU_stack.pop_back();
+        m_set[idx_from_address]->LRU_stack.push_front(hit_idx);
+      }
+
+      m_set[idx_from_address]->m_entry[hit_idx].m_tag = tag_from_address;
+      m_set[idx_from_address]->m_entry[hit_idx].m_dirty = false;
+      m_set[idx_from_address]->m_entry[hit_idx].m_valid = true;
     }
     break;
   case 1: // write
     m_num_writes += 1;
-    if ((tag_from_address == (m_set[idx_from_address]->m_entry[0].m_tag)) && (m_set[idx_from_address]->m_entry[0].m_valid)) {
+    if (hit) {
       m_num_hits += 1;
       m_set[idx_from_address]->m_entry[0].m_dirty = true;
+      
+      m_set[idx_from_address]->LRU_stack.remove(hit_idx);
+      m_set[idx_from_address]->LRU_stack.push_front(hit_idx);
     }
     else {
       m_num_misses += 1;
-      m_num_writebacks += m_set[idx_from_address]->m_entry[0].m_dirty;
+      m_num_writebacks += m_set[idx_from_address]->m_entry[hit_idx].m_dirty;
 
-      m_set[idx_from_address]->m_entry[0].m_tag = tag_from_address;
-      m_set[idx_from_address]->m_entry[0].m_dirty = true;
-      m_set[idx_from_address]->m_entry[0].m_valid = true;
+      if (!hit && (hit_idx != -1)) {
+        m_set[idx_from_address]->LRU_stack.remove(hit_idx);
+        m_set[idx_from_address]->LRU_stack.push_front(hit_idx);
+      }
+      else {
+        hit_idx = m_set[idx_from_address]->LRU_stack.back();
+        m_set[idx_from_address]->LRU_stack.pop_back();
+        m_set[idx_from_address]->LRU_stack.push_front(hit_idx);
+      }
+
+      m_set[idx_from_address]->m_entry[hit_idx].m_tag = tag_from_address;
+      m_set[idx_from_address]->m_entry[hit_idx].m_dirty = true;
+      m_set[idx_from_address]->m_entry[hit_idx].m_valid = true;
     }
     break;
   case 2: // instruction fetch
-    if ((tag_from_address == (m_set[idx_from_address]->m_entry[0].m_tag)) && (m_set[idx_from_address]->m_entry[0].m_valid)) {
+    if (hit) {
       m_num_hits += 1;
+
+      m_set[idx_from_address]->LRU_stack.remove(hit_idx);
+      m_set[idx_from_address]->LRU_stack.push_front(hit_idx);
     }
     else {
       m_num_misses += 1;
-      m_num_writebacks += m_set[idx_from_address]->m_entry[0].m_dirty;
+      m_num_writebacks += m_set[idx_from_address]->m_entry[hit_idx].m_dirty;
 
-      m_set[idx_from_address]->m_entry[0].m_tag = tag_from_address;
-    m_set[idx_from_address]->m_entry[0].m_dirty = false;
-      m_set[idx_from_address]->m_entry[0].m_valid = true;
+      if (!hit && (hit_idx != -1)) {
+        m_set[idx_from_address]->LRU_stack.remove(hit_idx);
+        m_set[idx_from_address]->LRU_stack.push_front(hit_idx);
+      }
+      else {
+        hit_idx = m_set[idx_from_address]->LRU_stack.back();
+        m_set[idx_from_address]->LRU_stack.pop_back();
+        m_set[idx_from_address]->LRU_stack.push_front(hit_idx);
+      }
+
+      m_set[idx_from_address]->m_entry[hit_idx].m_tag = tag_from_address;
+      m_set[idx_from_address]->m_entry[hit_idx].m_dirty = false;
+      m_set[idx_from_address]->m_entry[hit_idx].m_valid = true;
     }
     break;
   default:
     break;
   }
+}
+
+std::tuple<bool, int> cache_c::check_if_hit(int idx, int tag) {
+  for (int i=0; i < m_set[idx]->m_assoc; i++) {
+    if ((tag == (m_set[idx]->m_entry[i].m_tag)) && (m_set[idx]->m_entry[i].m_valid)) {
+      return std::make_tuple(true, i);
+    }
+    else if (!m_set[idx]->m_entry[i].m_valid) {
+      return std::make_tuple(false, i);
+    }
+  }
+  return std::make_tuple(false, -1);
 }
 
 /**

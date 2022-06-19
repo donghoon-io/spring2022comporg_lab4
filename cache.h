@@ -9,6 +9,10 @@
 #include <cstdint>
 #include <string>
 
+//Added
+#include <list>
+#include <tuple>
+
 typedef uint64_t addr_t;
 
 ///////////////////////////////////////////////////////////////////
@@ -33,6 +37,7 @@ public:
     cache_entry_c *m_entry;  // array of cache entries. 
     int m_assoc;             // number of cache blocks in a cache set
     // TODO: maintain the LRU stack for this set
+    std::list<int> LRU_stack;
 };
 
 ///////////////////////////////////////////////////////////////////
@@ -42,6 +47,7 @@ public:
   cache_c(std::string name, int num_set, int assoc, int line_size);
   ~cache_c();
   void access(addr_t address, int access_type);
+  std::tuple<bool, int> check_if_hit(int idx, int tag);
   void print_stats(void);
 
 private:
