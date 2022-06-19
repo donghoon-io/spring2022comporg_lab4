@@ -9,7 +9,7 @@
 #include <cmath>
 
 //Added
-#include <list>
+#include <vector>
 #include <tuple>
 
 /**
@@ -91,22 +91,21 @@ void cache_c::access(addr_t address, int access_type) {
     if (hit) {
       m_num_hits += 1;
       
-      m_set[idx_from_address]->LRU_stack.remove(hit_idx);
-      m_set[idx_from_address]->LRU_stack.push_front(hit_idx);
+      m_set[idx_from_address]->LRU_stack.erase(std::remove(m_set[idx_from_address]->LRU_stack.begin(), m_set[idx_from_address]->LRU_stack.end(), hit_idx), m_set[idx_from_address]->LRU_stack.end());
+      m_set[idx_from_address]->LRU_stack.insert(m_set[idx_from_address]->LRU_stack.begin(), hit_idx);
     }
     else {
       m_num_misses += 1;
 
       if (!hit && (hit_idx != -1)) {
-        m_set[idx_from_address]->LRU_stack.remove(hit_idx);
-        m_set[idx_from_address]->LRU_stack.push_front(hit_idx);
+        m_set[idx_from_address]->LRU_stack.erase(std::remove(m_set[idx_from_address]->LRU_stack.begin(), m_set[idx_from_address]->LRU_stack.end(), hit_idx), m_set[idx_from_address]->LRU_stack.end());
+        m_set[idx_from_address]->LRU_stack.insert(m_set[idx_from_address]->LRU_stack.begin(), hit_idx);
       }
       else {
         hit_idx = m_set[idx_from_address]->LRU_stack.back();
         m_num_writebacks += m_set[idx_from_address]->m_entry[hit_idx].m_dirty;
 
-        m_set[idx_from_address]->LRU_stack.pop_back();
-        m_set[idx_from_address]->LRU_stack.push_front(hit_idx);
+        std::rotate(m_set[idx_from_address]->LRU_stack.rbegin(), m_set[idx_from_address]->LRU_stack.rbegin() + 1, m_set[idx_from_address]->LRU_stack.rend());
       }
 
       m_set[idx_from_address]->m_entry[hit_idx].m_tag = tag_from_address;
@@ -120,22 +119,21 @@ void cache_c::access(addr_t address, int access_type) {
       m_num_hits += 1;
       m_set[idx_from_address]->m_entry[hit_idx].m_dirty = true;
       
-      m_set[idx_from_address]->LRU_stack.remove(hit_idx);
-      m_set[idx_from_address]->LRU_stack.push_front(hit_idx);
+      m_set[idx_from_address]->LRU_stack.erase(std::remove(m_set[idx_from_address]->LRU_stack.begin(), m_set[idx_from_address]->LRU_stack.end(), hit_idx), m_set[idx_from_address]->LRU_stack.end());
+      m_set[idx_from_address]->LRU_stack.insert(m_set[idx_from_address]->LRU_stack.begin(), hit_idx);
     }
     else {
       m_num_misses += 1;
 
       if (!hit && (hit_idx != -1)) {
-        m_set[idx_from_address]->LRU_stack.remove(hit_idx);
-        m_set[idx_from_address]->LRU_stack.push_front(hit_idx);
+        m_set[idx_from_address]->LRU_stack.erase(std::remove(m_set[idx_from_address]->LRU_stack.begin(), m_set[idx_from_address]->LRU_stack.end(), hit_idx), m_set[idx_from_address]->LRU_stack.end());
+        m_set[idx_from_address]->LRU_stack.insert(m_set[idx_from_address]->LRU_stack.begin(), hit_idx);
       }
       else {
         hit_idx = m_set[idx_from_address]->LRU_stack.back();
         m_num_writebacks += m_set[idx_from_address]->m_entry[hit_idx].m_dirty;
-
-        m_set[idx_from_address]->LRU_stack.pop_back();
-        m_set[idx_from_address]->LRU_stack.push_front(hit_idx);
+        
+        std::rotate(m_set[idx_from_address]->LRU_stack.rbegin(), m_set[idx_from_address]->LRU_stack.rbegin() + 1, m_set[idx_from_address]->LRU_stack.rend());
       }
 
       m_set[idx_from_address]->m_entry[hit_idx].m_tag = tag_from_address;
@@ -146,23 +144,22 @@ void cache_c::access(addr_t address, int access_type) {
   case 2: // instruction fetch
     if (hit) {
       m_num_hits += 1;
-
-      m_set[idx_from_address]->LRU_stack.remove(hit_idx);
-      m_set[idx_from_address]->LRU_stack.push_front(hit_idx);
+      
+      m_set[idx_from_address]->LRU_stack.erase(std::remove(m_set[idx_from_address]->LRU_stack.begin(), m_set[idx_from_address]->LRU_stack.end(), hit_idx), m_set[idx_from_address]->LRU_stack.end());
+      m_set[idx_from_address]->LRU_stack.insert(m_set[idx_from_address]->LRU_stack.begin(), hit_idx);
     }
     else {
       m_num_misses += 1;
 
       if (!hit && (hit_idx != -1)) {
-        m_set[idx_from_address]->LRU_stack.remove(hit_idx);
-        m_set[idx_from_address]->LRU_stack.push_front(hit_idx);
+        m_set[idx_from_address]->LRU_stack.erase(std::remove(m_set[idx_from_address]->LRU_stack.begin(), m_set[idx_from_address]->LRU_stack.end(), hit_idx), m_set[idx_from_address]->LRU_stack.end());
+        m_set[idx_from_address]->LRU_stack.insert(m_set[idx_from_address]->LRU_stack.begin(), hit_idx);
       }
       else {
         hit_idx = m_set[idx_from_address]->LRU_stack.back();
         m_num_writebacks += m_set[idx_from_address]->m_entry[hit_idx].m_dirty;
         
-        m_set[idx_from_address]->LRU_stack.pop_back();
-        m_set[idx_from_address]->LRU_stack.push_front(hit_idx);
+        std::rotate(m_set[idx_from_address]->LRU_stack.rbegin(), m_set[idx_from_address]->LRU_stack.rbegin() + 1, m_set[idx_from_address]->LRU_stack.rend());
       }
 
       m_set[idx_from_address]->m_entry[hit_idx].m_tag = tag_from_address;
